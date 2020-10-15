@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
@@ -30,12 +31,15 @@ public class SignInActivity extends AppCompatActivity {
     private EditText editText_confirm_password;
     private EditText editText_mobile;
     private TextView textView_logIn;
+    TextView snacksbar_view;
 
     private Button button_signIn;
 
     DatabaseReference databaseReference;
 
     private FirebaseAuth mAuth;
+
+    ConnectionDetect connectionDetect;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +51,18 @@ public class SignInActivity extends AppCompatActivity {
         button_signIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                signIn();
+               // signIn();
+                if (connectionDetect.isConnectingToInternet()) {
+                    signIn();
+                } else {
+
+                    Snackbar snackbar = Snackbar
+                            .make(snacksbar_view,
+                                    "Please check internet",
+                                    Snackbar.LENGTH_LONG);
+                    snackbar.show();
+
+                }
 
             }
         });
@@ -146,6 +161,8 @@ public class SignInActivity extends AppCompatActivity {
         editText_confirm_password = findViewById(R.id.editText_confirm_password_signin);
         editText_mobile = findViewById(R.id.editText_mobile);
         textView_logIn = findViewById(R.id.textView_logIn);
+        connectionDetect = new ConnectionDetect(this);
+        snacksbar_view = findViewById(R.id.snackbar_view);
 
         button_signIn = findViewById(R.id.button_signIn);
         databaseReference= FirebaseDatabase.getInstance().getReference("UserData");

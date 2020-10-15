@@ -13,8 +13,10 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -25,12 +27,15 @@ public class LoginActivity extends AppCompatActivity {
     private EditText editText_email;
     private EditText editText_password;
     private TextView textView_signIn;
+    TextView snacksbar_view;
+    LottieAnimationView progressbar;
 
     CheckBox rememberMe;
 
     private Button button_logIn;
     private FirebaseAuth mAuth;
     SessionManager sessionManager;
+    ConnectionDetect connectionDetect;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +43,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         init();
+        progressbar.cancelAnimation();
 
         if(sessionManager.checkRememberMe()){
             HashMap<String,String> getRememberMeDetails = sessionManager.getRememberingData();
@@ -48,7 +54,18 @@ public class LoginActivity extends AppCompatActivity {
         button_logIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                userLogIn();
+               // userLogIn();
+                if (connectionDetect.isConnectingToInternet()) {
+                    userLogIn();
+                } else {
+
+                    Snackbar snackbar = Snackbar
+                            .make(snacksbar_view,
+                                    "Please check internet",
+                                    Snackbar.LENGTH_LONG);
+                    snackbar.show();
+
+                }
             }
         });
 
@@ -64,10 +81,12 @@ public class LoginActivity extends AppCompatActivity {
 
     private void userLogIn() {
 
-        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,R.style.Theme_AppCompat_DayNight_Dialog);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Authenticating...");
-        progressDialog.show();
+//        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,R.style.Theme_AppCompat_DayNight_Dialog);
+//        progressDialog.setIndeterminate(true);
+//        progressDialog.setMessage("Authenticating...");
+//        progressDialog.show();
+        progressbar.playAnimation();
+
 
         String email=editText_email.getText().toString().trim();
         String password= editText_password.getText().toString().trim();
@@ -76,7 +95,8 @@ public class LoginActivity extends AppCompatActivity {
         {
             editText_email.setError("Enter an valid email address");
             editText_email.requestFocus();
-            progressDialog.dismiss();
+//            progressDialog.dismiss();
+            progressbar.cancelAnimation();
             return;
         }
 
@@ -87,7 +107,8 @@ public class LoginActivity extends AppCompatActivity {
         {
             editText_password.setError("Enter a valid password");
             editText_password.requestFocus();
-            progressDialog.dismiss();
+//            progressDialog.dismiss();
+            progressbar.cancelAnimation();
             return;
         }
         if(rememberMe.isChecked()){
@@ -98,7 +119,8 @@ public class LoginActivity extends AppCompatActivity {
         mAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
-                progressDialog.dismiss();
+               // progressDialog.dismiss();
+                progressbar.cancelAnimation();
 
                 if(task.isSuccessful()){
                     //open activity
@@ -126,7 +148,10 @@ public class LoginActivity extends AppCompatActivity {
         editText_password = findViewById(R.id.editText_Password);
         textView_signIn = findViewById(R.id.textView_signIn);
         button_logIn = findViewById(R.id.Button_Login);
+        snacksbar_view = findViewById(R.id.snackbar_view);
+        progressbar = findViewById(R.id.progressBar);
         mAuth = FirebaseAuth.getInstance();
+        connectionDetect = new ConnectionDetect(this);
         rememberMe = findViewById(R.id.checkbox_remember_me);
         sessionManager = new SessionManager(LoginActivity.this, SessionManager.SESSOIN_REMEMBERME);
 
